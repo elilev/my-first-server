@@ -1,28 +1,456 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>My First Server</title>
-  <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>To Do List</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #0f0f11;
+      font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+      padding: 2rem;
+    }
+
+    /* ── Layout ── */
+    .app {
+      display: flex;
+      width: 100%;
+      max-width: 780px;
+      min-height: 520px;
+      border-radius: 18px;
+      overflow: hidden;
+      box-shadow: 0 8px 48px rgba(0,0,0,0.55);
+      border: 1px solid #2a2a32;
+    }
+
+    /* ── Sidebar ── */
+    .sidebar {
+      width: 220px;
+      min-width: 220px;
+      background: #13131a;
+      border-right: 1px solid #2a2a32;
+      display: flex;
+      flex-direction: column;
+      padding: 1.5rem 1rem 1rem;
+    }
+
+    .sidebar-header {
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #555565;
+      margin-bottom: 1rem;
+      padding: 0 0.25rem;
+    }
+
+    .list-nav {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      flex: 1;
+      overflow-y: auto;
+    }
+
+    .list-nav-item {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      border-radius: 8px;
+      padding: 0.45rem 0.6rem;
+      cursor: pointer;
+      transition: background 0.12s;
+      color: #9090a8;
+      font-size: 0.875rem;
+    }
+
+    .list-nav-item:hover { background: #1e1e28; color: #c0c0d8; }
+
+    .list-nav-item.active {
+      background: rgba(91,91,240,0.15);
+      color: #a0a0f8;
+    }
+
+    .list-nav-item .nav-label {
+      flex: 1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .nav-delete {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: transparent;
+      font-size: 0.8rem;
+      padding: 1px 3px;
+      border-radius: 4px;
+      line-height: 1;
+      transition: color 0.12s, background 0.12s;
+      flex-shrink: 0;
+    }
+
+    .list-nav-item:hover .nav-delete { color: #555565; }
+    .nav-delete:hover { color: #e05a5a !important; background: rgba(224,90,90,0.1); }
+
+    .sidebar-add-btn {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: #5b5bf0;
+      font-size: 0.85rem;
+      font-family: inherit;
+      font-weight: 500;
+      padding: 0.5rem 0.6rem;
+      border-radius: 8px;
+      margin-top: 0.75rem;
+      transition: color 0.12s, background 0.12s;
+      width: 100%;
+      text-align: left;
+    }
+
+    .sidebar-add-btn:hover {
+      color: #7b7bf8;
+      background: rgba(91,91,240,0.08);
+    }
+
+    /* ── Main panel ── */
+    .main {
+      flex: 1;
+      background: #1a1a1f;
+      padding: 2rem;
+      display: flex;
+      flex-direction: column;
+    }
+
+    h1 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: #f0f0f5;
+      letter-spacing: -0.02em;
+      margin-bottom: 1.5rem;
+      border-radius: 6px;
+      padding: 2px 6px;
+      margin-left: -6px;
+      outline: none;
+      cursor: text;
+      transition: background 0.15s;
+    }
+
+    h1:hover { background: rgba(255,255,255,0.05); }
+    h1:focus  { background: rgba(91,91,240,0.1); caret-color: #5b5bf0; }
+
+    /* ── Item list ── */
+    #item-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+      flex: 1;
+    }
+
+    .todo-item {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      background: #22222a;
+      border: 1px solid #2e2e38;
+      border-radius: 10px;
+      padding: 0.6rem 0.75rem;
+      transition: border-color 0.15s;
+    }
+
+    .todo-item:focus-within { border-color: #5b5bf0; }
+
+    .todo-item input[type="checkbox"] {
+      appearance: none;
+      -webkit-appearance: none;
+      width: 18px;
+      height: 18px;
+      min-width: 18px;
+      border: 2px solid #444452;
+      border-radius: 5px;
+      cursor: pointer;
+      position: relative;
+      transition: background 0.15s, border-color 0.15s;
+    }
+
+    .todo-item input[type="checkbox"]:checked {
+      background: #5b5bf0;
+      border-color: #5b5bf0;
+    }
+
+    .todo-item input[type="checkbox"]:checked::after {
+      content: '';
+      position: absolute;
+      left: 3px; top: 0;
+      width: 5px; height: 9px;
+      border: 2px solid #fff;
+      border-top: none; border-left: none;
+      transform: rotate(45deg);
+    }
+
+    .todo-item .item-text {
+      flex: 1;
+      background: transparent;
+      border: none;
+      outline: none;
+      color: #d4d4e0;
+      font-size: 0.95rem;
+      font-family: inherit;
+      caret-color: #5b5bf0;
+    }
+
+    .todo-item .item-text::placeholder { color: #444452; }
+    .todo-item.done .item-text { color: #555565; text-decoration: line-through; }
+
+    .delete-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: #444452;
+      font-size: 1rem;
+      line-height: 1;
+      padding: 2px 4px;
+      border-radius: 4px;
+      transition: color 0.15s, background 0.15s;
+      display: flex;
+      align-items: center;
+    }
+
+    .delete-btn:hover { color: #e05a5a; background: rgba(224,90,90,0.1); }
+
+    /* ── Add item button ── */
+    #add-btn {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: #5b5bf0;
+      font-size: 0.9rem;
+      font-family: inherit;
+      font-weight: 500;
+      padding: 0.5rem 0.25rem;
+      border-radius: 8px;
+      transition: color 0.15s, background 0.15s;
+      width: 100%;
+    }
+
+    #add-btn:hover { color: #7b7bf8; background: rgba(91,91,240,0.08); }
+    #add-btn .plus-icon { font-size: 1.15rem; }
+  </style>
 </head>
 <body>
-  <header>
-    <a class="site-title" href="/">MySite</a>
-    <nav>
-      <ul>
-        <li><a href="/" class="active">Home</a></li>
-        <li><a href="/about">About</a></li>
-        <li><a href="/contact">Contact</a></li>
-      </ul>
-    </nav>
-  </header>
+  <div class="app">
 
-  <main>
-  <h1>Welcome to My Server</h1>
-  <p>This page is being served by Node.js and Express.</p>
-  <p>I built this myself.</p>
-  </main>
-  <footer>
-    <p>&copy; 2024 &mdash; <a href="https://github.com">GitHub</a></p>
-  </footer>
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <p class="sidebar-header">My to-do lists</p>
+      <ul class="list-nav" id="list-nav"></ul>
+      <button class="sidebar-add-btn" id="sidebar-add-btn">
+        <span>+</span> New list
+      </button>
+    </aside>
+
+    <!-- Main panel -->
+    <main class="main">
+      <h1 id="list-title" contenteditable="true" spellcheck="false"></h1>
+      <ul id="item-list"></ul>
+      <button id="add-btn">
+        <span class="plus-icon">+</span> Add new item
+      </button>
+    </main>
+
+  </div>
+
+  <script>
+    const STORAGE_KEY = 'todo-app-v2';
+
+    // ── State ────────────────────────────────────────────────
+    let state = load();
+
+    function defaultState() {
+      const id = uid();
+      return { activeId: id, lists: [{ id, title: 'To do list', items: [] }] };
+    }
+
+    function load() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) return JSON.parse(raw);
+      } catch {}
+      return defaultState();
+    }
+
+    function save() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    }
+
+    function uid() {
+      return Date.now().toString(36) + Math.random().toString(36).slice(2);
+    }
+
+    function activeList() {
+      return state.lists.find(l => l.id === state.activeId);
+    }
+
+    // ── DOM refs ─────────────────────────────────────────────
+    const listNav      = document.getElementById('list-nav');
+    const sidebarAdd   = document.getElementById('sidebar-add-btn');
+    const titleEl      = document.getElementById('list-title');
+    const itemListEl   = document.getElementById('item-list');
+    const addItemBtn   = document.getElementById('add-btn');
+
+    // ── Render sidebar ───────────────────────────────────────
+    function renderSidebar() {
+      listNav.innerHTML = '';
+      state.lists.forEach(list => {
+        const li = document.createElement('li');
+        li.className = 'list-nav-item' + (list.id === state.activeId ? ' active' : '');
+
+        const label = document.createElement('span');
+        label.className = 'nav-label';
+        label.textContent = list.title || 'Untitled';
+
+        const del = document.createElement('button');
+        del.className = 'nav-delete';
+        del.title = 'Delete list';
+        del.innerHTML = '&#x2715;';
+        del.addEventListener('click', e => {
+          e.stopPropagation();
+          if (state.lists.length === 1) return; // keep at least one
+          state.lists = state.lists.filter(l => l.id !== list.id);
+          if (state.activeId === list.id) state.activeId = state.lists[0].id;
+          save();
+          render();
+        });
+
+        li.append(label, del);
+        li.addEventListener('click', () => {
+          state.activeId = list.id;
+          save();
+          render();
+        });
+
+        listNav.appendChild(li);
+      });
+    }
+
+    // ── Render main panel ────────────────────────────────────
+    function renderMain() {
+      const list = activeList();
+      titleEl.textContent = list.title;
+      itemListEl.innerHTML = '';
+      list.items.forEach((item, idx) => appendItemEl(item, idx));
+    }
+
+    function render() {
+      renderSidebar();
+      renderMain();
+    }
+
+    // ── Title editing ─────────────────────────────────────────
+    titleEl.addEventListener('input', () => {
+      activeList().title = titleEl.textContent.trim() || 'Untitled';
+      save();
+      renderSidebar(); // keep sidebar in sync
+    });
+
+    titleEl.addEventListener('keydown', e => {
+      if (e.key === 'Enter') { e.preventDefault(); titleEl.blur(); }
+    });
+
+    // ── Item element ──────────────────────────────────────────
+    function appendItemEl(item, idx) {
+      const li = document.createElement('li');
+      li.className = 'todo-item' + (item.done ? ' done' : '');
+
+      const checkbox = document.createElement('input');
+      checkbox.type = 'checkbox';
+      checkbox.checked = item.done;
+
+      const text = document.createElement('input');
+      text.type = 'text';
+      text.className = 'item-text';
+      text.placeholder = 'New item…';
+      text.value = item.label;
+
+      const del = document.createElement('button');
+      del.className = 'delete-btn';
+      del.title = 'Delete item';
+      del.innerHTML = '&#x2715;';
+
+      checkbox.addEventListener('change', () => {
+        item.done = checkbox.checked;
+        li.classList.toggle('done', item.done);
+        save();
+      });
+
+      text.addEventListener('input', () => {
+        item.label = text.value;
+        save();
+      });
+
+      text.addEventListener('keydown', e => {
+        if (e.key !== 'Enter') return;
+        const list = activeList();
+        const newItem = { label: '', done: false };
+        list.items.splice(idx + 1, 0, newItem);
+        save();
+        renderMain();
+        // focus the new row
+        const rows = itemListEl.querySelectorAll('.item-text');
+        if (rows[idx + 1]) rows[idx + 1].focus();
+      });
+
+      del.addEventListener('click', () => {
+        activeList().items.splice(idx, 1);
+        save();
+        renderMain();
+      });
+
+      li.append(checkbox, text, del);
+      itemListEl.appendChild(li);
+    }
+
+    // ── Add item button ───────────────────────────────────────
+    addItemBtn.addEventListener('click', () => {
+      const list = activeList();
+      list.items.push({ label: '', done: false });
+      save();
+      renderMain();
+      const rows = itemListEl.querySelectorAll('.item-text');
+      rows[rows.length - 1]?.focus();
+    });
+
+    // ── New list button ───────────────────────────────────────
+    sidebarAdd.addEventListener('click', () => {
+      const id = uid();
+      state.lists.push({ id, title: 'New list', items: [] });
+      state.activeId = id;
+      save();
+      render();
+      titleEl.focus();
+      // select all text so user can rename immediately
+      document.execCommand('selectAll');
+    });
+
+    // ── Init ──────────────────────────────────────────────────
+    render();
+  </script>
 </body>
 </html>
