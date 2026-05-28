@@ -1,6 +1,6 @@
 const express = require('express');
 const app = express();
-const port = 3000;
+const port = process.env.PORT || 3000;
 
 app.use(express.static('public'));
 
@@ -13,10 +13,6 @@ app.get('/api/joke', async (req, res) => {
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch joke' });
   }
-});
-
-app.get('/', (req, res) => {
-  res.send('Hello, World! This is my first server.');
 });
 
 app.get('/about', (req, res) => { 
